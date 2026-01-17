@@ -1,0 +1,612 @@
+{
+  "meta": {
+    "year": 2026,
+    "rocYear": 115,
+    "source": "行政院人事行政總處",
+    "dataset": "政府行政機關辦公日曆表（Google 行事曆 CSV）",
+    "generatedAt": "2026-01-16",
+    "timezone": "Asia/Taipei"
+  },
+  "days": {
+    "2026-01-01": {
+      "isHoliday": true,
+      "name": "中華民國開國紀念日",
+      "type": "NATIONAL_HOLIDAY"
+    },
+    "2026-01-03": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-01-04": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-01-10": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-01-11": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-01-17": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-01-18": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-01-24": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-01-25": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-01-31": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-02-01": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-02-07": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-02-08": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-02-14": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-02-15": {
+      "isHoliday": true,
+      "name": "小年夜",
+      "type": "NATIONAL_HOLIDAY"
+    },
+    "2026-02-16": {
+      "isHoliday": true,
+      "name": "農曆除夕",
+      "type": "NATIONAL_HOLIDAY"
+    },
+    "2026-02-17": {
+      "isHoliday": true,
+      "name": "春節",
+      "type": "NATIONAL_HOLIDAY"
+    },
+    "2026-02-18": {
+      "isHoliday": true,
+      "name": "春節",
+      "type": "NATIONAL_HOLIDAY"
+    },
+    "2026-02-19": {
+      "isHoliday": true,
+      "name": "春節",
+      "type": "NATIONAL_HOLIDAY"
+    },
+    "2026-02-20": {
+      "isHoliday": true,
+      "name": "補假",
+      "type": "COMPENSATORY_HOLIDAY"
+    },
+    "2026-02-21": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-02-22": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-02-27": {
+      "isHoliday": true,
+      "name": "補假",
+      "type": "COMPENSATORY_HOLIDAY"
+    },
+    "2026-02-28": {
+      "isHoliday": true,
+      "name": "和平紀念日",
+      "type": "NATIONAL_HOLIDAY"
+    },
+    "2026-03-01": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-03-07": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-03-08": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-03-14": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-03-15": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-03-21": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-03-22": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-03-28": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-03-29": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-04-03": {
+      "isHoliday": true,
+      "name": "補假",
+      "type": "COMPENSATORY_HOLIDAY"
+    },
+    "2026-04-04": {
+      "isHoliday": true,
+      "name": "兒童節",
+      "type": "NATIONAL_HOLIDAY"
+    },
+    "2026-04-05": {
+      "isHoliday": true,
+      "name": "清明節",
+      "type": "NATIONAL_HOLIDAY"
+    },
+    "2026-04-06": {
+      "isHoliday": true,
+      "name": "補假",
+      "type": "COMPENSATORY_HOLIDAY"
+    },
+    "2026-04-11": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-04-12": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-04-18": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-04-19": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-04-25": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-04-26": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-05-01": {
+      "isHoliday": true,
+      "name": "勞動節",
+      "type": "NATIONAL_HOLIDAY"
+    },
+    "2026-05-02": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-05-03": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-05-09": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-05-10": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-05-16": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-05-17": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-05-23": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-05-24": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-05-30": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-05-31": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-06-06": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-06-07": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-06-13": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-06-14": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-06-19": {
+      "isHoliday": true,
+      "name": "端午節",
+      "type": "NATIONAL_HOLIDAY"
+    },
+    "2026-06-20": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-06-21": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-06-27": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-06-28": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-07-04": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-07-05": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-07-11": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-07-12": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-07-18": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-07-19": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-07-25": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-07-26": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-08-01": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-08-02": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-08-08": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-08-09": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-08-15": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-08-16": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-08-22": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-08-23": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-08-29": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-08-30": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-09-05": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-09-06": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-09-12": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-09-13": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-09-19": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-09-20": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-09-25": {
+      "isHoliday": true,
+      "name": "中秋節",
+      "type": "NATIONAL_HOLIDAY"
+    },
+    "2026-09-26": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-09-27": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-09-28": {
+      "isHoliday": true,
+      "name": "教師節",
+      "type": "NATIONAL_HOLIDAY"
+    },
+    "2026-10-03": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-10-04": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-10-09": {
+      "isHoliday": true,
+      "name": "補假",
+      "type": "COMPENSATORY_HOLIDAY"
+    },
+    "2026-10-10": {
+      "isHoliday": true,
+      "name": "國慶日",
+      "type": "NATIONAL_HOLIDAY"
+    },
+    "2026-10-11": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-10-17": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-10-18": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-10-24": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-10-25": {
+      "isHoliday": true,
+      "name": "臺灣光復暨金門古寧頭大捷紀念日",
+      "type": "NATIONAL_HOLIDAY"
+    },
+    "2026-10-26": {
+      "isHoliday": true,
+      "name": "補假",
+      "type": "COMPENSATORY_HOLIDAY"
+    },
+    "2026-10-31": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-11-01": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-11-07": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-11-08": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-11-14": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-11-15": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-11-21": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-11-22": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-11-28": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-11-29": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-12-05": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-12-06": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-12-12": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-12-13": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-12-19": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-12-20": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-12-25": {
+      "isHoliday": true,
+      "name": "行憲紀念日",
+      "type": "NATIONAL_HOLIDAY"
+    },
+    "2026-12-26": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    },
+    "2026-12-27": {
+      "isHoliday": true,
+      "name": "例假日",
+      "type": "WEEKEND"
+    }
+  }
+}

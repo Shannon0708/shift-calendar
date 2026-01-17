@@ -1,0 +1,1076 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>假日計算機</title>
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#101a2d; --text:#e7edf7; --muted:#a8b3c7;
+      --line:rgba(255,255,255,.12); --red:#ff5a6a; --green:#42d38b; --yellow:#ffd56a;
+      --blue:#6aa7ff; --purple:#c58bff; --gray:#9aa7bb; --shadow: 0 10px 28px rgba(0,0,0,.35);
+      --radius:14px; --cell: 118px;
+
+    --pageBg: radial-gradient(1200px 600px at 15% 10%, rgba(106,167,255,.22), transparent 55%),
+              radial-gradient(900px 500px at 70% 10%, rgba(197,139,255,.18), transparent 55%),
+              radial-gradient(900px 700px at 50% 90%, rgba(66,211,139,.12), transparent 55%),
+              var(--bg);
+
+    }
+    html {
+      font-size: 100%; /* 吃 Android / iOS 系統字體大小 */
+    }
+    *{box-sizing:border-box;}
+
+    html, body { height: auto; overflow-x: hidden; overflow-y: auto;}
+    body { padding: 24px; background: var(--pageBg); }
+
+    /* Light theme overrides */
+    :root[data-theme="light"]{
+      --bg:#f6f8fc; --panel:#ffffff; --text:#0b1220; --muted:#53607a;
+      --line:rgba(0,0,0,.12); --shadow: 0 10px 28px rgba(0,0,0,.10);
+      --pageBg: radial-gradient(1200px 600px at 15% 10%, rgba(106,167,255,.16), transparent 55%),
+                radial-gradient(900px 500px at 70% 10%, rgba(197,139,255,.12), transparent 55%),
+                radial-gradient(900px 700px at 50% 90%, rgba(66,211,139,.10), transparent 55%),
+                var(--bg);
+    }
+
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", Arial;
+      color: var(--text);
+    }
+    .wrap{max-width:1200px; margin:0 auto; display:grid; grid-template-columns: 1.55fr .95fr; gap:18px; min-height: 100svh;}
+    @media (max-width: 1020px){ .wrap{grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; min-height: 100svh;} }
+    .card{display:flex; flex-direction:column; background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow:hidden;}
+    .header{flex:0 0 auto; padding:16px 18px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line);
+      background: rgba(0,0,0,.08);}
+    .title{display:flex; gap:10px; align-items:baseline; flex-wrap:wrap;}
+    /* .title h1{font-size: clamp(0.9rem, 1em, 1.05rem); margin:0;} */
+    .controls,
+    .controls button,
+    .controls select,
+    .controls input {
+      font-size: clamp(0.72rem, 0.85rem, 0.9rem);
+    }
+    .controls select {max-width: 5.5rem;}
+
+    .title .sub{color:var(--muted); clamp(0.7rem, 0.85em, 0.85rem);}
+    .controls{display:flex; gap:6px; align-items:center; flex-wrap:wrap;  min-width: 0;} /* min-width 允許內部 shrink */
+    .controls > * {   /*所有 controls 允許被壓縮*/
+      min-width: 0;             /* 不設這個一定會爆 */
+      flex-shrink: 1;           /* 預設是 1，但明寫比較安全 */
+    }
+    button, select, input[type="number"]{background: rgba(255,255,255,.06); color: var(--text); border: 1px solid var(--line);
+      border-radius: 10px; padding: 9px 10px; outline:none; cursor:pointer;}
+    .year-input {
+      width: clamp(4.8rem, 5.2rem, 6rem);
+      font-size: inherit;          /* 吃系統字體大小 */
+      padding:  0.35em 0.4em;        /* 跟字體比例走 */
+      text-align: center;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    button:hover{background: rgba(255,255,255,.10);}
+    .ghost{background: transparent;}
+    .danger{border-color: rgba(255,90,106,.55);}
+    .ok{border-color: rgba(66,211,139,.55);}
+    .grid{padding: 12px 12px 16px 12px; overflow:auto; flex:1; min-height:0;}
+    .dow{display:grid; grid-template-columns: repeat(7, 1fr); gap:10px; padding: 0 6px 10px 6px; color: var(--muted); font-size: 12px;}
+    .dow div{padding:6px 8px;}
+    .cal{display:grid; grid-template-columns: repeat(7, 1fr); gap:10px; padding: 0 6px;}
+    .cell{min-height: var(--cell); padding: 10px 10px 8px 10px; border:1px solid var(--line); border-radius: 14px;
+      background: rgba(16,26,45,.72); position:relative; transition: transform .06s ease, background .12s ease, border-color .12s ease; cursor:pointer;}
+    .cell:hover{ transform: translateY(-1px); background: rgba(16,26,45,.86); }
+    .cell.muted{ opacity:.45; background: rgba(16,26,45,.45); cursor:default;}
+    .dateRow{display:flex; justify-content:space-between; align-items:flex-start; gap:6px;}
+    .dayNum{font-size: clamp(0.8rem, 0.9em, 0.95rem); font-weight:650;}
+    .badges{display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;}
+    .badge{font-size:11px; padding: 2px 8px; border-radius: 999px; border:1px solid var(--line); color: var(--muted);
+      background: rgba(255,255,255,.04); white-space:nowrap;}
+    .badge.red{color:#ffd1d6; border-color: rgba(255,90,106,.55); background: rgba(255,90,106,.12);}
+    .badge.work{color:#d7e7ff; border-color: rgba(106,167,255,.55); background: rgba(106,167,255,.12);}
+    .badge.reg{color:#ffe7bd; border-color: rgba(255,213,106,.55); background: rgba(255,213,106,.12);}
+    .badge.wei{color:#c8ffe7; border-color: rgba(66,211,139,.55); background: rgba(66,211,139,.12);}
+    .badge.comp{color:#f2e0ff; border-color: rgba(197,139,255,.55); background: rgba(197,139,255,.12);}
+    .badge.psy{color:#e8efff; border-color: rgba(154,167,187,.55); background: rgba(154,167,187,.12);}
+    .badge.sick{color:#e8efff; border-color: rgba(154,167,187,.55); background: rgba(154,167,187,.12);}
+    .badge.personal{color:#e8efff; border-color: rgba(154,167,187,.55); background: rgba(154,167,187,.12);}
+    
+    .note{margin-top:8px; font-size: 12px; color: var(--muted); line-height: 1.35; min-height: 34px; overflow:hidden;}
+    
+    .cell.redDay{ border-color: rgba(255,90,106,.35); }
+    .cell.today{ outline: 2px solid rgba(106,167,255,.55); outline-offset: 2px; }
+    .side{padding:16px 18px 18px 18px; overflow:auto; flex:1; min-height:0;}
+    .stats{display:grid; gap:10px; margin-top: 10px;}
+    .stat{background: rgba(0,0,0,.12); border: 1px solid var(--line); border-radius: 14px; padding: 12px 12px;}
+    .stat h3{margin:0 0 6px 0; font-size:13px; color: var(--muted); font-weight:600;}
+    .stat .big{font-size: clamp(1.1rem, 1.3em, 1.4rem); font-weight:750; margin: 2px 0 0 0;}
+    .stat .row{display:flex; gap:10px; flex-wrap:wrap; margin-top: 6px; color: var(--muted); font-size: 12px;}
+    .pill{padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.04);}
+    .pill.ok{border-color: rgba(66,211,139,.55); color: #c8ffe7; background: rgba(66,211,139,.10);}
+    .pill.warn{border-color: rgba(255,213,106,.55); color: #ffe7bd; background: rgba(255,213,106,.10);}
+    .pill.bad{border-color: rgba(255,90,106,.55); color: #ffd1d6; background: rgba(255,90,106,.10);}
+    .legend{margin-top: 14px; display:grid; gap:8px; color: var(--muted); font-size: 12px;}
+    .legend .item{display:flex; align-items:center; gap:8px;}
+    .dot{width:10px;height:10px;border-radius:50%;}
+    .dot.red{background: var(--red);}
+    .dot.work{background: var(--blue);}
+    .dot.reg{background: var(--yellow);}
+    .dot.wei{background: var(--green);}
+    .dot.comp{background: var(--purple);}
+    .dot.psy{background: var(--gray);}
+    .hr{height:1px; background: var(--line); margin: 12px 0;}
+    .small{font-size:12px; color: var(--muted); line-height:1.4;}
+    .row2{display:flex; gap:8px; flex-wrap:wrap;}
+    textarea{width:100%; min-height:120px; padding:10px; background: rgba(255,255,255,.04); color: var(--text);
+      border:1px solid var(--line); border-radius: 12px; outline:none; resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:12px;}
+    .modalBack{position:fixed; inset:0; background: rgba(0,0,0,.58); display:none; align-items:center; justify-content:center;
+      padding: 18px; z-index:999;}
+    .modal{width:min(560px, 100%); background: rgba(16,26,45,.96); border:1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); overflow:hidden;}
+    .modal .mHead{padding: 14px 16px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); background: rgba(0,0,0,.12);}
+    .modal .mHead .mTitle{font-weight:750;}
+    .modal .mBody{padding: 14px 16px 16px 16px; display:grid; gap:10px;}
+    .field{display:grid; gap:6px;}
+    .field label{font-size:12px; color: var(--muted);}
+    .field select, .field input{width:100%;}
+    .modal .mActions{padding: 12px 16px; display:flex; gap:8px; justify-content:flex-end; border-top:1px solid var(--line); background: rgba(0,0,0,.10);}
+  
+/* ===== Calendar layout fixes ===== */
+.cal {
+  grid-template-columns: repeat(7, minmax(0, 1fr)); /* force 7 equal columns */
+}
+
+.cell {
+  min-width: 0;            /* prevent overflow causing horizontal scroll */
+  word-break: break-word;  /* allow text wrap */
+}
+
+.dow {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+/* Prevent horizontal scroll on small screens */
+.cal, .dow {
+  overflow-x: hidden;
+}
+/* ===============================
+   Google Calendar MODE
+   上半月曆 / 下半統計
+   =============================== */
+body[data-mode="google"] {
+   /* 關鍵：整體字體 scale（吃系統設定） */
+  font-size: 0.9em; /* 相對於 html */
+}
+
+body[data-mode="google"] .badges {
+  justify-content: center;
+  margin-top: 2px;
+}
+
+
+body[data-mode="google"] .cell {
+  padding: 2px 2px;
+}
+
+body[data-mode="google"] .controls {
+  flex-wrap: nowrap;
+}
+
+body[data-mode="google"] .controls * {
+  font-size: clamp(0.7rem, 0.82rem, 0.88rem);
+}
+
+/* 上半：月曆 */
+body[data-mode="google"] .card:first-child {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 下半：統計 */
+body[data-mode="google"] .card:last-child {
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+/* 簡化 cell 顯示 */
+body[data-mode="google"] .badge,
+body[data-mode="google"] .note ,
+body[data-mode="google"] .header .sub {
+  display: none !important;
+}
+
+body[data-mode="google"] .dot {
+  display: inline-block !important;
+  width: 6px;
+  height: 6px;
+}
+
+body[data-mode="google"] .dateRow {
+  flex-direction: column;
+  align-items: center;
+}
+
+body[data-mode="google"] .grid {
+  overflow: visible;
+}
+
+body[data-mode="google"] .wrap {
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
+  height: auto;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===============================
+  DEFAULT (Desktop / non-google)
+   =============================== */
+body:not([data-mode="google"]) .badge {
+  display: inline-flex;
+  white-space: normal;
+  line-height: 1.2;
+}
+
+body:not([data-mode="google"]) .badges {
+  justify-content: flex-start;
+  max-width: 100%;
+}
+
+
+/* Desktop：允許換行 */
+body:not([data-mode="google"]) .controls {
+  flex-wrap: wrap;
+}
+
+body:not([data-mode="google"]) .dot {
+  display: none;
+}
+
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="header">
+        <div class="title">
+          <h1 id="pageTitle">排班月曆</h1>
+          <!-- <div class="sub" id="pageSub">
+            見紅休來源：政府 115 年行事曆 CSV。支援：點日期改假別；統計補假 / 慰休 / 心理調適假。
+          </div> -->
+        </div>
+        <div class="controls">
+          <button id="prevBtn" class="ghost">←</button>
+          <select id="monthSel"></select>
+          <input id="yearInp" type="number" min="1970" max="2100" class="year-input">
+
+          <button id="nextBtn" class="ghost">→</button>
+          <button id="themeBtn" class="ghost">切換模式</button>
+          <button id="todayBtn">回到今天</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="dow">
+          <div>週一</div><div>週二</div><div>週三</div><div>週四</div><div>週五</div>
+          <div style="color:#ffd1d6;">週六</div><div style="color:#ffd1d6;">週日</div>
+        </div>
+        <div class="cal" id="cal"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="header">
+        <div class="title">
+          <h1>統計與設定</h1>
+          <div class="sub" id="scopeText"></div>
+        </div>
+      </div>
+      <div class="side">
+        <div class="row2">
+          <button id="resetMonthBtn" class="danger">清除此月紀錄</button>
+          <button id="resetAllBtn" class="danger">清除全部紀錄</button>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="stat">
+          <h3>政府行事曆資料</h3>
+          <div class="small" id="govStatus">載入中…</div>
+          <div class="row2" style="margin-top:10px;">
+            <button id="reloadGovBtn">重載政府 JSON</button>
+            <button id="importGovBtn" class="ghost">匯入政府 JSON（選檔）</button>
+            <input id="govFileInp" type="file" accept="application/json" style="display:none;" />
+          </div>
+          <div class="small" style="margin-top:8px;">
+            手機若用「直接開檔」(file://)，fetch 可能被瀏覽器限制；此頁已內建 115 年 JSON 作為備援，也可用「選檔匯入」。
+          </div>
+        </div>
+
+        <div class="stat">
+          <h3>修護獎金</h3>
+          <div class="big" id="workDayBig">—</div>
+          <div class="row">
+            <div class="pill" id="requiredWorkPill">應上班：—</div>
+            <div class="pill" id="actualWorkPill">實際上班：—</div>
+            <div class="pill" id="thresholdWorkPill">門檻：—</div>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <h3>慰休（固定 21 天）</h3>
+            <div class="big" id="weiBig">—</div>
+            <div class="row">
+              <div class="pill" id="weiUsedPill">已用：—</div>
+              <div class="pill ok" id="weiLeftPill">剩餘：—</div>
+            </div>
+          </div>
+
+          <div class="stat">
+            <h3>心理調適假（每年自動更新 3 天）</h3>
+            <div class="big" id="psyBig">—</div>
+            <div class="row">
+              <div class="pill" id="psyUsedPill">已用：—</div>
+              <div class="pill ok" id="psyLeftPill">剩餘：—</div>
+            </div>
+            <div class="small" style="margin-top:8px;">
+              規則：以「年份」為單位，該年心理調適假額度固定 3 天；切換年份會自動換算。
+            </div>
+          </div>
+
+          <div class="stat">
+            <h3>補假（見紅休出勤累積；補假使用扣除）</h3>
+            <div class="big" id="compBig">—</div>
+            <div class="row">
+              <div class="pill" id="compEarnPill">累積額度：—</div>
+              <div class="pill" id="compUsedPill">已用：—</div>
+              <div class="pill" id="compOwePill">尚有：—</div>
+            </div>
+            <div class="small" style="margin-top:8px;">
+              計算方式：<br/>
+              1) 政府公告例假日若改成「上班」→ 視為例假出勤，補假額度 +1。<br/>
+              2) 標成「補假」→ 視為使用 1 天補假。<br/>
+              3) 「尚有 = 累積額度 - 已用」。若為負數，代表你先借用補假（需人工對帳）。
+            </div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="legend">
+          <div class="item"><span class="dot red"></span>見紅休（政府行事曆）</div>
+          <div class="item"><span class="dot work"></span>上班</div>
+          <div class="item"><span class="dot reg"></span>例假</div>
+          <div class="item"><span class="dot wei"></span>慰休</div>
+          <div class="item"><span class="dot comp"></span>補假</div>
+          <div class="item"><span class="dot psy"></span>心理調適假</div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="small">
+          備份/移轉：可匯出 JSON，或貼上 JSON 匯入。<br/>
+          注意：本頁只用瀏覽器儲存（localStorage），沒有上傳到任何伺服器。
+        </div>
+
+        <div style="margin-top:10px;" class="row2">
+          <button id="exportBtn">匯出紀錄 JSON</button>
+          <button id="importBtn">匯入紀錄 JSON</button>
+        </div>
+        <textarea id="jsonBox" placeholder="匯出後會顯示在這裡；或把 JSON 貼在這裡再按「匯入紀錄 JSON」。"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="modalBack" id="modalBack">
+    <div class="modal">
+      <div class="mHead">
+        <div class="mTitle" id="mTitle">—</div>
+        <button id="closeModal" class="ghost">關閉</button>
+      </div>
+      <div class="mBody">
+        <div class="field">
+          <label>例假日</label>
+          <div id="mIsRed" class="small">—</div>
+        </div>
+        <div class="field">
+          <label>狀態（點此改假別）</label>
+          <select id="statusSel"></select>
+        </div>
+        <div class="field">
+          <label>備註（可留空）</label>
+          <input id="noteInp" type="text" placeholder="例如：補假尚未核發、先放慰休、換班…" />
+        </div>
+        <div class="small" id="mHint">—</div>
+      </div>
+      <div class="mActions">
+        <button id="clearDayBtn" class="danger">清除此日設定</button>
+        <button id="saveDayBtn" class="ok">儲存</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+
+  
+(() => {
+  // ====== Gov calendar JSON (115) inline fallback ======
+  // 目的：手機用 file:// 直接開檔時，fetch 可能被瀏覽器封鎖；這份內建資料可確保「見紅休」仍然正確。
+  const GOV_CALENDAR_INLINE = {"meta": {"year": 2026, "rocYear": 115, "source": "行政院人事行政總處", "dataset": "政府行政機關辦公日曆表（Google 行事曆 CSV）", "generatedAt": "2026-01-16", "timezone": "Asia/Taipei"}, "days": {"2026-01-01": {"isHoliday": true, "name": "中華民國開國紀念日", "type": "NATIONAL_HOLIDAY"}, "2026-01-03": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-01-04": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-01-10": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-01-11": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-01-17": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-01-18": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-01-24": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-01-25": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-01-31": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-02-01": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-02-07": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-02-08": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-02-14": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-02-15": {"isHoliday": true, "name": "小年夜", "type": "NATIONAL_HOLIDAY"}, "2026-02-16": {"isHoliday": true, "name": "農曆除夕", "type": "NATIONAL_HOLIDAY"}, "2026-02-17": {"isHoliday": true, "name": "春節", "type": "NATIONAL_HOLIDAY"}, "2026-02-18": {"isHoliday": true, "name": "春節", "type": "NATIONAL_HOLIDAY"}, "2026-02-19": {"isHoliday": true, "name": "春節", "type": "NATIONAL_HOLIDAY"}, "2026-02-20": {"isHoliday": true, "name": "補假", "type": "COMPENSATORY_HOLIDAY"}, "2026-02-21": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-02-22": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-02-27": {"isHoliday": true, "name": "補假", "type": "COMPENSATORY_HOLIDAY"}, "2026-02-28": {"isHoliday": true, "name": "和平紀念日", "type": "NATIONAL_HOLIDAY"}, "2026-03-01": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-03-07": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-03-08": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-03-14": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-03-15": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-03-21": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-03-22": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-03-28": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-03-29": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-04-03": {"isHoliday": true, "name": "補假", "type": "COMPENSATORY_HOLIDAY"}, "2026-04-04": {"isHoliday": true, "name": "兒童節", "type": "NATIONAL_HOLIDAY"}, "2026-04-05": {"isHoliday": true, "name": "清明節", "type": "NATIONAL_HOLIDAY"}, "2026-04-06": {"isHoliday": true, "name": "補假", "type": "COMPENSATORY_HOLIDAY"}, "2026-04-11": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-04-12": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-04-18": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-04-19": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-04-25": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-04-26": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-05-01": {"isHoliday": true, "name": "勞動節", "type": "NATIONAL_HOLIDAY"}, "2026-05-02": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-05-03": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-05-09": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-05-10": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-05-16": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-05-17": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-05-23": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-05-24": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-05-30": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-05-31": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-06-06": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-06-07": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-06-13": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-06-14": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-06-19": {"isHoliday": true, "name": "端午節", "type": "NATIONAL_HOLIDAY"}, "2026-06-20": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-06-21": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-06-27": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-06-28": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-07-04": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-07-05": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-07-11": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-07-12": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-07-18": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-07-19": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-07-25": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-07-26": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-08-01": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-08-02": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-08-08": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-08-09": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-08-15": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-08-16": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-08-22": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-08-23": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-08-29": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-08-30": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-09-05": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-09-06": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-09-12": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-09-13": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-09-19": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-09-20": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-09-25": {"isHoliday": true, "name": "中秋節", "type": "NATIONAL_HOLIDAY"}, "2026-09-26": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-09-27": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-09-28": {"isHoliday": true, "name": "教師節", "type": "NATIONAL_HOLIDAY"}, "2026-10-03": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-10-04": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-10-09": {"isHoliday": true, "name": "補假", "type": "COMPENSATORY_HOLIDAY"}, "2026-10-10": {"isHoliday": true, "name": "國慶日", "type": "NATIONAL_HOLIDAY"}, "2026-10-11": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-10-17": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-10-18": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-10-24": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-10-25": {"isHoliday": true, "name": "臺灣光復暨金門古寧頭大捷紀念日", "type": "NATIONAL_HOLIDAY"}, "2026-10-26": {"isHoliday": true, "name": "補假", "type": "COMPENSATORY_HOLIDAY"}, "2026-10-31": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-11-01": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-11-07": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-11-08": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-11-14": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-11-15": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-11-21": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-11-22": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-11-28": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-11-29": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-12-05": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-12-06": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-12-12": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-12-13": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-12-19": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-12-20": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-12-25": {"isHoliday": true, "name": "行憲紀念日", "type": "NATIONAL_HOLIDAY"}, "2026-12-26": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}, "2026-12-27": {"isHoliday": true, "name": "例假日", "type": "WEEKEND"}}};
+
+  // 你也可以把 gov-calendar-115.json 放在同資料夾，頁面會優先嘗試 fetch 外部檔案以利更新。
+  const GOV_JSON_URL = "./gov-calendar-115.json";
+
+  // ====== Config ======
+  const WEI_TOTAL = 21;
+  const PSY_TOTAL_PER_YEAR = 3;
+
+  // 你要求的 9/3 軍人節（如果政府行事曆未列為放假，可在此加為「自訂紅字」）
+  const CUSTOM_HOLIDAYS = {
+    // "YYYY-MM-DD": "名稱"
+    "2026-09-03": "軍人節"
+  };
+
+  const STATUS = {
+    WORK: "WORK",
+    REGULAR_OFF: "REGULAR_OFF",
+    WEI: "WEI",
+    COMP: "COMP",
+    PSY: "PSY",
+    SICK: "SICK",
+    PERSONAL: "PERSONAL"
+  };
+
+  const STATUS_META = {
+    [STATUS.WORK]:        { label: "上班", className: "work" },
+    [STATUS.REGULAR_OFF]: { label: "例假", className: "reg" },
+    [STATUS.WEI]:         { label: "慰休", className: "wei" },
+    [STATUS.COMP]:        { label: "補假", className: "comp" },
+    [STATUS.PSY]:         { label: "心理調適假", className: "psy" },
+    [STATUS.SICK]:        { label: "病假", className: "sick" },
+    [STATUS.PERSONAL]:    { label: "事假", className: "personal"}
+  };
+
+  // ====== Storage ======
+  const STORE_KEY = "shiftCalendar.v2";           // 使用紀錄
+  const GOV_STORE_KEY = "govCalendar.cache.v1";   // 政府行事曆快取（可讓你匯入其他年份）
+
+  const loadAll = () => {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY) || "{}"); }
+    catch { return {}; }
+  };
+  const saveAll = (obj) => localStorage.setItem(STORE_KEY, JSON.stringify(obj));
+
+  const loadGovCache = () => {
+    try { return JSON.parse(localStorage.getItem(GOV_STORE_KEY) || "null"); }
+    catch { return null; }
+  };
+  const saveGovCache = (obj) => localStorage.setItem(GOV_STORE_KEY, JSON.stringify(obj));
+
+
+  // ====== Theme (Dark/Light) ======
+  const THEME_KEY = "shiftCalendar.theme";
+  const themeBtn = document.getElementById("themeBtn");
+
+  function applyTheme(theme) {
+    const t = (theme === "light") ? "light" : "dark";
+    document.documentElement.dataset.theme = t;
+    if (themeBtn) themeBtn.textContent = (t === "light") ? "深夜模式" : "日間模式";
+  }
+
+  function initTheme() {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved) {
+      applyTheme(saved);
+      return;
+    }
+    // Default: follow system preference
+    const prefersLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+    applyTheme(prefersLight ? "light" : "dark");
+  }
+
+  if (themeBtn) {
+    themeBtn.addEventListener("click", () => {
+      const current = document.documentElement.dataset.theme || "dark";
+      const next = (current === "light") ? "dark" : "light";
+      localStorage.setItem(THEME_KEY, next);
+      applyTheme(next);
+    });
+  }
+
+
+  // ====== Date helpers ======
+  const pad2 = (n) => String(n).padStart(2, "0");
+  const keyOf = (y,m,d) => `${y}-${pad2(m)}-${pad2(d)}`; // m: 1-12
+  const parseKey = (k) => {
+    const [y,mm,dd] = k.split("-").map(Number);
+    return {y, m:mm, d:dd};
+  };
+
+  // ====== Workday Calculations ======
+  function computeMonthlyRequiredWorkDays(year, month) {
+    const last = new Date(year, month, 0);
+    const daysInMonth = last.getDate();
+    let required = 0;
+
+    for(let d = 1; d <= daysInMonth; d++) {
+      if(!isRedDay(year, month, d)) {
+        required++;
+      }
+    }
+    return required;
+  }
+
+  
+  // ===== Actual Working days（由 baseline + 使用者調整）=====
+  function computeActualWorkDays(year, month, requiredWorkDays) {
+    let actual = requiredWorkDays;
+    const last = new Date(year, month, 0);
+    const daysInMonth = last.getDate();
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const entry = store[keyOf(year, month, d)];
+      if (!entry || !entry.status) continue;
+
+      const isRed = isRedDay(year, month, d);
+
+      // 平日請假 → -1
+      if (!isRed && entry.status !== STATUS.WORK) {
+        actual--;
+      }
+
+      // 紅字上班 → +1
+      if (isRed && entry.status === STATUS.WORK) {
+        actual++;
+      }
+    }
+
+    return actual;
+  }
+
+  // ===== 修護獎金門檻（60% 無條件進位）=====
+  function computeMaintenanceBonusThreshold(requiredWorkDays) {
+    return Math.ceil(requiredWorkDays * 0.6);
+  }
+
+  const isSameDay = (a,b) =>
+    a.getFullYear()===b.getFullYear() &&
+    a.getMonth()===b.getMonth() &&
+    a.getDate()===b.getDate();
+
+  // ====== UI refs ======
+  const calEl = document.getElementById("cal");
+  const monthSel = document.getElementById("monthSel");
+  const yearInp = document.getElementById("yearInp");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const todayBtn = document.getElementById("todayBtn");
+  const scopeText = document.getElementById("scopeText");
+
+  const resetMonthBtn = document.getElementById("resetMonthBtn");
+  const resetAllBtn = document.getElementById("resetAllBtn");
+
+  const weiBig = document.getElementById("weiBig");
+  const weiUsedPill = document.getElementById("weiUsedPill");
+  const weiLeftPill = document.getElementById("weiLeftPill");
+
+  const psyBig = document.getElementById("psyBig");
+  const psyUsedPill = document.getElementById("psyUsedPill");
+  const psyLeftPill = document.getElementById("psyLeftPill");
+
+  const compBig = document.getElementById("compBig");
+  const compEarnPill = document.getElementById("compEarnPill");
+  const compUsedPill = document.getElementById("compUsedPill");
+  const compOwePill = document.getElementById("compOwePill");
+
+  const exportBtn = document.getElementById("exportBtn");
+  const importBtn = document.getElementById("importBtn");
+  const jsonBox = document.getElementById("jsonBox");
+
+  const govStatus = document.getElementById("govStatus");
+  const reloadGovBtn = document.getElementById("reloadGovBtn");
+  const importGovBtn = document.getElementById("importGovBtn");
+  const govFileInp = document.getElementById("govFileInp");
+
+  // Modal
+  const modalBack = document.getElementById("modalBack");
+  const closeModal = document.getElementById("closeModal");
+  const mTitle = document.getElementById("mTitle");
+  const mIsRed = document.getElementById("mIsRed");
+  const statusSel = document.getElementById("statusSel");
+  const noteInp = document.getElementById("noteInp");
+  const mHint = document.getElementById("mHint");
+  const clearDayBtn = document.getElementById("clearDayBtn");
+  const saveDayBtn = document.getElementById("saveDayBtn");
+
+  // ====== State ======
+  let uiMode = "desktop";
+
+  function detectUIMode() {
+    return window.innerWidth <= 480 ? "google" : "desktop";
+  }
+
+  function syncUIMode() {
+    const nextMode = detectUIMode();
+    if (document.body.dataset.mode !== nextMode) {
+      document.body.dataset.mode = nextMode;
+    }
+  }
+
+
+  const now = new Date();
+  let viewYear = now.getFullYear();
+  let viewMonth = now.getMonth()+1;
+  let store = loadAll();
+
+  // 政府行事曆（會先嘗試：localStorage cache -> fetch -> inline）
+  let govCalendar = null;
+
+  // ====== Init selects ======
+  const monthNames = ["1 月","2 月","3 月","4 月","5 月","6 月","7 月","8 月","9 月","10 月","11 月","12 月"];
+  monthNames.forEach((t,i)=>{
+    const opt=document.createElement("option");
+    opt.value = String(i+1);
+    opt.textContent = t;
+    monthSel.appendChild(opt);
+  });
+  Object.entries(STATUS_META).forEach(([k,v])=>{
+    const opt=document.createElement("option");
+    opt.value = k;
+    opt.textContent = v.label;
+    statusSel.appendChild(opt);
+  });
+
+  // ====== Gov calendar loading ======
+  function getGovDay(dateStr) {
+    // 自訂紅字（優先）
+    if (CUSTOM_HOLIDAYS[dateStr]) {
+      return { isHoliday:true, name:CUSTOM_HOLIDAYS[dateStr], type:"CUSTOM_HOLIDAY" };
+    }
+    return govCalendar?.days?.[dateStr] || null;
+  }
+
+  function isRedDay(y,m,d) {
+    const dateStr = keyOf(y,m,d);
+    const govDay = getGovDay(dateStr);
+    // 若 gov 有資料（或自訂紅字），以它為準；否則視為非紅字（避免補班週六被誤判）
+    return govDay ? (govDay.isHoliday === true) : false;
+  }
+
+  function redDayLabel(y,m,d) {
+    const dateStr = keyOf(y,m,d);
+    const govDay = getGovDay(dateStr);
+    return govDay ? govDay.name : "";
+  }
+
+  async function loadGovCalendar() {
+    // 1) localStorage cache
+    const cached = loadGovCache();
+    if (cached?.days) {
+      govCalendar = cached;
+      govStatus.textContent = `已載入（快取）：${cached.meta?.rocYear ?? "?"} 年｜共 ${Object.keys(cached.days).length} 天`;
+      return;
+    }
+
+    // 2) try fetch external json (for easier updating)
+    try {
+      const res = await fetch(GOV_JSON_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data?.days) throw new Error("JSON 格式不正確：缺少 days");
+      govCalendar = data;
+      saveGovCache(data);
+      govStatus.textContent = `已載入（檔案）：${data.meta?.rocYear ?? "?"} 年｜共 ${Object.keys(data.days).length} 天`;
+      return;
+    } catch (err) {
+      // 3) fallback inline
+      govCalendar = GOV_CALENDAR_INLINE;
+      govStatus.textContent = `已載入（內建備援）：115 年｜共 ${Object.keys(govCalendar.days).length} 天（原因：無法讀取外部 JSON）`;
+    }
+  }
+
+  function importGovJsonObject(obj) {
+    if (!obj || typeof obj !== "object" || !obj.days) {
+      alert("政府 JSON 格式不正確：必須包含 days 欄位");
+      return;
+    }
+    govCalendar = obj;
+    saveGovCache(obj);
+    govStatus.textContent = `已載入（匯入）：${obj.meta?.rocYear ?? "?"} 年｜共 ${Object.keys(obj.days).length} 天`;
+    render();
+  }
+
+  reloadGovBtn.addEventListener("click", async ()=>{
+    // clear cache then reload
+    localStorage.removeItem(GOV_STORE_KEY);
+    govStatus.textContent = "重新載入中…";
+    await loadGovCalendar();
+    render();
+  });
+
+  importGovBtn.addEventListener("click", ()=> govFileInp.click());
+  govFileInp.addEventListener("change", async (e)=>{
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const obj = JSON.parse(text);
+      importGovJsonObject(obj);
+    } catch (err) {
+      alert("匯入失敗：" + err.message);
+    } finally {
+      govFileInp.value = "";
+    }
+  });
+
+  // ====== Core logic: day status ======
+  const getDayEntry = (y,m,d) => store[keyOf(y,m,d)] || null;
+
+  // 預設上班日上班紅字例假日，但你可手動改成例假/慰休/補假/心理調適假
+  const getDayStatus = (y,m,d) => {
+    const e = getDayEntry(y,m,d);
+    if (e?.status) {
+      return e.status;
+    }
+
+    if (isRedDay(y,m,d)) {
+      return STATUS.REGULAR_OFF; // 在 json 裡，但沒標 status → 例假日
+    }
+
+    return STATUS.WORK; // 不在 json 裡 → 上班日
+  };
+  const getDayNote = (y,m,d) => {
+    const e = getDayEntry(y,m,d);
+    return (e && e.note) ? e.note : "";
+  };
+
+  function renderDayCell({ y, m, d }) {
+    const cell = document.createElement("div");
+    cell.className = "cell";
+
+    const red = isRedDay(y, m, d);
+    if (red) cell.classList.add("redDay");
+    if (isSameDay(new Date(y, m - 1, d), now)) cell.classList.add("today");
+
+    const st = getDayStatus(y, m, d);
+    const note = getDayNote(y, m, d);
+
+    /* ===== date row ===== */
+    const row = document.createElement("div");
+    row.className = "dateRow";
+
+    const dayNum = document.createElement("div");
+    dayNum.className = "dayNum";
+    dayNum.textContent = String(d);
+
+    const badges = document.createElement("div");
+    badges.className = "badges";
+
+    /* ===== 永遠生 badge（文字）===== */
+    if (red) {
+      const redBadge = document.createElement("span");
+      redBadge.className = "badge red";
+      redBadge.textContent = redDayLabel(y, m, d) || "紅字";
+      badges.appendChild(redBadge);
+    }
+
+    const statusBadge = document.createElement("span");
+    statusBadge.className = "badge " + (STATUS_META[st]?.className || "");
+    statusBadge.textContent = STATUS_META[st]?.label || st;
+    badges.appendChild(statusBadge);
+
+    /* ===== 永遠生 dot（顏色）===== */
+    const dot = document.createElement("span");
+    dot.className = "dot";
+
+    if (red && st === STATUS.WORK) {
+      dot.classList.add("comp"); // 例假日留守
+    } else if (red) {
+      dot.classList.add("reg");
+    } else if (st === STATUS.WEI) {
+      dot.classList.add("wei");
+    } else if (st === STATUS.COMP) {
+      dot.classList.add("comp");
+    } else if (st === STATUS.PSY) {
+      dot.classList.add("psy");
+    } else {
+      dot.classList.add("work");
+    }
+
+    badges.appendChild(dot);
+
+    row.appendChild(dayNum);
+    row.appendChild(badges);
+
+    /* ===== note ===== */
+    const noteEl = document.createElement("div");
+    noteEl.className = "note";
+    noteEl.textContent = note || " ";
+
+    cell.appendChild(row);
+    cell.appendChild(noteEl);
+
+    cell.addEventListener("click", () => openEditModal(y, m, d));
+
+    return cell;
+  }
+
+
+  // ====== Rendering ======
+  function render() {
+    monthSel.value = String(viewMonth);
+    yearInp.value = String(viewYear);
+    scopeText.textContent =
+      `統計範圍：${viewYear} 年（心理調適假以年份計；慰休/補假為全部資料累積）`;
+
+    calEl.innerHTML = "";
+
+    const first = new Date(viewYear, viewMonth - 1, 1);
+    const last = new Date(viewYear, viewMonth, 0);
+    const daysInMonth = last.getDate();
+
+    const firstDow = (first.getDay() + 6) % 7; // Monday-first
+    const totalCells = Math.ceil((firstDow + daysInMonth) / 7) * 7;
+
+    for (let i = 0; i < totalCells; i++) {
+      const dayNum = i - firstDow + 1;
+
+      if (dayNum < 1 || dayNum > daysInMonth) {
+        const empty = document.createElement("div");
+        empty.className = "cell muted";
+        calEl.appendChild(empty);
+        continue;
+      }
+
+      const cell = renderDayCell({
+        y: viewYear,
+        m: viewMonth,
+        d: dayNum
+      });
+
+      calEl.appendChild(cell);
+    }
+
+    computeAndRenderStats();
+  }
+
+  function computeAndRenderStats() {
+     // ===== 修護獎金 / 上班天數（每次 render 都重新算）=====
+    const requiredWorkDays = computeMonthlyRequiredWorkDays(viewYear, viewMonth);
+
+    const actualWorkDays = computeActualWorkDays(viewYear, viewMonth, requiredWorkDays);
+
+    const maintenanceThreshold = computeMaintenanceBonusThreshold(requiredWorkDays);
+
+    let weiUsed = 0;
+    let psyUsedYear = 0;
+
+    let compEarned = 0;
+    let compUsed = 0;
+
+    const keys = Object.keys(store);
+    for (const k of keys) {
+      const e = store[k];
+      if (!e || !e.status) continue;
+      const {y,m,d} = parseKey(k);
+
+      if (e.status === STATUS.WEI) weiUsed++;
+      if (y === viewYear && e.status === STATUS.PSY) psyUsedYear++;
+      if (e.status === STATUS.COMP) compUsed++;
+
+      if (isRedDay(y,m,d) && e.status === STATUS.WORK) compEarned++;
+    }
+
+    const weiLeft = WEI_TOTAL - weiUsed;
+    weiBig.textContent = `${Math.max(weiLeft,0)} 天剩餘`;
+    weiUsedPill.textContent = `已用：${weiUsed} 天`;
+    weiLeftPill.textContent = `剩餘：${weiLeft} 天`;
+    weiLeftPill.className = "pill " + (weiLeft>=0 ? "ok" : "bad");
+
+    const psyLeft = PSY_TOTAL_PER_YEAR - psyUsedYear;
+    psyBig.textContent = `${Math.max(psyLeft,0)} 天（${viewYear} 年剩餘）`;
+    psyUsedPill.textContent = `已用：${psyUsedYear} 天`;
+    psyLeftPill.textContent = `剩餘：${psyLeft} 天`;
+    psyLeftPill.className = "pill " + (psyLeft>=0 ? "ok" : "bad");
+
+    const owe = compEarned - compUsed;
+    compBig.textContent = `${owe} 天`;
+    compEarnPill.textContent = `累積額度：${compEarned} 天`;
+    compUsedPill.textContent = `已用：${compUsed} 天`;
+    compOwePill.textContent = `尚有：${owe} 天`;
+    compOwePill.className = "pill " + (owe>=0 ? "ok" : "warn");
+    
+    requiredWorkPill.textContent = `應上班：${requiredWorkDays} 天`;
+
+    actualWorkPill.textContent = `實際上班：${actualWorkDays} 天`;
+
+    thresholdWorkPill.textContent = `門檻：${maintenanceThreshold} 天`;
+
+  workDayBig.textContent =
+    actualWorkDays >= maintenanceThreshold ? "✅ 達標" : "❌ 未達標";
+
+    // // TEST: working days calculation
+    // console.log("📊 每月應上班天數:", requiredWorkDays);
+    // console.log("📊 實際上班天數:", actualWorkDays);
+    // console.log("📊 修護獎金門檻:", maintenanceThreshold);
+
+  }
+
+  // ====== Modal ======
+  let editing = null;
+  function openEditModal(y,m,d) {
+    editing = {y,m,d};
+    const k = keyOf(y,m,d);
+    const red = isRedDay(y,m,d);
+    const st = getDayStatus(y,m,d);
+    const note = getDayNote(y,m,d);
+    const label = redDayLabel(y,m,d);
+
+    mTitle.textContent = `編輯：${k}`;
+    mIsRed.textContent = red ? `是（${label || "政府行事曆"}）` : "否";
+
+    statusSel.value = st;
+    noteInp.value = note;
+
+    const hints = [];
+    if (red) {
+      hints.push("這天是見紅休：若選「例假」→ 計入例假。");
+      hints.push("若選「上班」→ 視為紅字出勤，補假額度 +1。");
+      hints.push("若選「慰休/補假/心理調適假」→ 代表你用該假別休，不視為例假。");
+    } else {
+      hints.push("這天不是見紅休：通常不影響補假額度。");
+    }
+    mHint.textContent = hints.join(" ");
+
+    modalBack.style.display = "flex";
+  }
+
+  function closeEditModal() {
+    modalBack.style.display = "none";
+    editing = null;
+  }
+
+  closeModal.addEventListener("click", closeEditModal);
+  modalBack.addEventListener("click", (e)=>{ if (e.target===modalBack) closeEditModal(); });
+
+  clearDayBtn.addEventListener("click", ()=>{
+    if (!editing) return;
+    const k = keyOf(editing.y, editing.m, editing.d);
+    delete store[k];
+    saveAll(store);
+    closeEditModal();
+    render();
+  });
+
+  saveDayBtn.addEventListener("click", ()=>{
+    if (!editing) return;
+    const k = keyOf(editing.y, editing.m, editing.d);
+    store[k] = { status: statusSel.value, note: noteInp.value.trim() };
+    saveAll(store);
+    closeEditModal();
+    render();
+  });
+
+  // ====== Navigation ======
+  prevBtn.addEventListener("click", ()=>{
+    viewMonth--;
+    if (viewMonth<=0){ viewMonth=12; viewYear--; }
+    render();
+  });
+  nextBtn.addEventListener("click", ()=>{
+    viewMonth++;
+    if (viewMonth>=13){ viewMonth=1; viewYear++; }
+    render();
+  });
+  todayBtn.addEventListener("click", ()=>{
+    viewYear = now.getFullYear();
+    viewMonth = now.getMonth()+1;
+    render();
+  });
+  monthSel.addEventListener("change", ()=>{
+    viewMonth = Number(monthSel.value);
+    render();
+  });
+  yearInp.addEventListener("change", ()=>{
+    const v = Number(yearInp.value);
+    if (!Number.isFinite(v)) return;
+    viewYear = Math.max(1970, Math.min(2100, v));
+    render();
+  });
+
+  // ====== Reset actions ======
+  resetMonthBtn.addEventListener("click", ()=>{
+    if (!confirm("確定要清除此月所有設定？（只影響目前檢視月份）")) return;
+    const y=viewYear, m=viewMonth;
+    for (let d=1; d<=31; d++) {
+      const k=keyOf(y,m,d);
+      if (store[k]) delete store[k];
+    }
+    saveAll(store);
+    render();
+  });
+
+  resetAllBtn.addEventListener("click", ()=>{
+    if (!confirm("確定要清除全部紀錄？（不可復原）")) return;
+    store = {};
+    saveAll(store);
+    render();
+  });
+
+  // ====== Import/Export shift records ======
+  exportBtn.addEventListener("click", ()=>{
+    jsonBox.value = JSON.stringify(store, null, 2);
+    jsonBox.focus();
+    jsonBox.select();
+  });
+
+  importBtn.addEventListener("click", ()=>{
+    try{
+      const obj = JSON.parse(jsonBox.value);
+      if (!obj || typeof obj !== "object") throw new Error("JSON 不是物件");
+      for (const [k,v] of Object.entries(obj)) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(k)) throw new Error("日期格式錯誤：" + k);
+        if (!v || typeof v !== "object") throw new Error("資料格式錯誤：" + k);
+        if (v.status && !STATUS_META[v.status]) throw new Error("未知狀態：" + v.status + " @ " + k);
+        if (v.note && typeof v.note !== "string") throw new Error("note 必須是字串：" + k);
+      }
+      store = obj;
+      saveAll(store);
+      alert("匯入成功");
+      render();
+    } catch(err) {
+      alert("匯入失敗：" + err.message);
+    }
+  });
+
+  // 裝置旋轉
+  window.addEventListener("orientationchange", () => {
+    syncUIMode();
+  });
+
+  // Resize
+  let resizeTimer = null;
+
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      syncUIMode();
+    }, 150);
+  });
+
+
+  // ====== Boot ======
+  (async ()=>{
+    initTheme();
+    await loadGovCalendar();
+    syncUIMode();
+    render();
+  })();
+})();
+</script>
+</body>
+</html>
