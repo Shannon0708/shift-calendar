@@ -1020,12 +1020,15 @@
       const clearDayBtn = document.getElementById("clearDayBtn");
       const saveDayBtn = document.getElementById("saveDayBtn");
 
+<<<<<<< HEAD
       const requiredWorkPill = document.getElementById("requiredWorkPill");
       const actualWorkPill = document.getElementById("actualWorkPill");
       const thresholdWorkPill = document.getElementById("thresholdWorkPill");
       const workDayBig = document.getElementById("workDayBig");
 
 
+=======
+>>>>>>> a14468be7eba40eba65024783ea075e7c60a4b37
       // ====== State ======
       let uiMode = "desktop";
 
@@ -1072,6 +1075,173 @@
         }
         return govCalendar?.days?.[dateStr] || null;
       }
+<<<<<<< HEAD
+
+      function isRedDay(y, m, d) {
+        const dateStr = keyOf(y, m, d);
+        const govDay = getGovDay(dateStr);
+        // 若 gov 有資料（或自訂紅字），以它為準；否則視為非紅字（避免補班週六被誤判）
+        return govDay ? (govDay.isHoliday === true) : false;
+      }
+
+      function redDayLabel(y, m, d) {
+        const dateStr = keyOf(y, m, d);
+        const govDay = getGovDay(dateStr);
+        return govDay ? govDay.name : "";
+      }
+
+      async function loadGovCalendar() {
+        // 1) localStorage cache
+        const cached = loadGovCache();
+        if (cached?.days) {
+          govCalendar = cached;
+          govStatus.textContent = `已載入（快取）：${cached.meta?.rocYear ?? "?"} 年｜共 ${Object.keys(cached.days).length} 天`;
+          return;
+        }
+
+        // 2) try fetch external json (for easier updating)
+        try {
+          const res = await fetch(GOV_JSON_URL, { cache: "no-store" });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          if (!data?.days) throw new Error("JSON 格式不正確：缺少 days");
+          govCalendar = data;
+          saveGovCache(data);
+          govStatus.textContent = `已載入（檔案）：${data.meta?.rocYear ?? "?"} 年｜共 ${Object.keys(data.days).length} 天`;
+          return;
+        } catch (err) {
+          // 3) fallback inline
+          govCalendar = GOV_CALENDAR_INLINE;
+          govStatus.textContent = `已載入（內建備援）：115 年｜共 ${Object.keys(govCalendar.days).length} 天（原因：無法讀取外部 JSON）`;
+        }
+      }
+
+      function importGovJsonObject(obj) {
+        if (!obj || typeof obj !== "object" || !obj.days) {
+          alert("政府 JSON 格式不正確：必須包含 days 欄位");
+          return;
+        }
+        govCalendar = obj;
+        saveGovCache(obj);
+        govStatus.textContent = `已載入（匯入）：${obj.meta?.rocYear ?? "?"} 年｜共 ${Object.keys(obj.days).length} 天`;
+        render();
+      }
+
+      reloadGovBtn.addEventListener("click", async () => {
+        // clear cache then reload
+        localStorage.removeItem(GOV_STORE_KEY);
+        govStatus.textContent = "重新載入中…";
+        await loadGovCalendar();
+        render();
+      });
+
+      importGovBtn.addEventListener("click", () => govFileInp.click());
+      govFileInp.addEventListener("change", async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const obj = JSON.parse(text);
+          importGovJsonObject(obj);
+        } catch (err) {
+          alert("匯入失敗：" + err.message);
+        } finally {
+          govFileInp.value = "";
+        }
+      });
+
+      // ====== Core logic: day status ======
+      const getDayEntry = (y, m, d) => store[keyOf(y, m, d)] || null;
+
+      // 預設上班日上班紅字例假日，但你可手動改成例假/慰休/補假/心理調適假
+      const getDayStatus = (y, m, d) => {
+        const e = getDayEntry(y, m, d);
+        if (e?.status) {
+          return e.status;
+        }
+
+        if (isRedDay(y, m, d)) {
+          return STATUS.REGULAR_OFF; // 在 json 裡，但沒標 status → 例假日
+        }
+
+        return STATUS.WORK; // 不在 json 裡 → 上班日
+      };
+      const getDayNote = (y, m, d) => {
+        const e = getDayEntry(y, m, d);
+        return (e && e.note) ? e.note : "";
+      };
+
+      function renderDayCell({ y, m, d }) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+
+        const red = isRedDay(y, m, d);
+        if (red) cell.classList.add("redDay");
+        if (isSameDay(new Date(y, m - 1, d), now)) cell.classList.add("today");
+
+        const st = getDayStatus(y, m, d);
+        const note = getDayNote(y, m, d);
+
+        /* ===== date row ===== */
+        const row = document.createElement("div");
+        row.className = "dateRow";
+
+        const dayNum = document.createElement("div");
+        dayNum.className = "dayNum";
+        dayNum.textContent = String(d);
+
+        const badges = document.createElement("div");
+        badges.className = "badges";
+
+        /* ===== 永遠生 badge（文字）===== */
+        if (red) {
+          const redBadge = document.createElement("span");
+          redBadge.className = "badge red";
+          redBadge.textContent = redDayLabel(y, m, d) || "紅字";
+          badges.appendChild(redBadge);
+        }
+
+        const statusBadge = document.createElement("span");
+        statusBadge.className = "badge " + (STATUS_META[st]?.className || "");
+        statusBadge.textContent = STATUS_META[st]?.label || st;
+        badges.appendChild(statusBadge);
+
+        /* ===== 永遠生 dot（顏色）===== */
+        const dot = document.createElement("span");
+        dot.className = "dot";
+
+        if (red && st === STATUS.WORK) {
+          dot.classList.add("comp"); // 例假日留守
+        } else if (red) {
+          dot.classList.add("reg");
+        } else if (st === STATUS.WEI) {
+          dot.classList.add("wei");
+        } else if (st === STATUS.COMP) {
+          dot.classList.add("comp");
+        } else if (st === STATUS.PSY) {
+          dot.classList.add("psy");
+        } else {
+          dot.classList.add("work");
+        }
+
+        badges.appendChild(dot);
+
+        row.appendChild(dayNum);
+        row.appendChild(badges);
+
+        /* ===== note ===== */
+        const noteEl = document.createElement("div");
+        noteEl.className = "note";
+        noteEl.textContent = note || " ";
+
+        cell.appendChild(row);
+        cell.appendChild(noteEl);
+
+        cell.addEventListener("click", () => openEditModal(y, m, d));
+
+        return cell;
+      }
+=======
 
       function isRedDay(y, m, d) {
         const dateStr = keyOf(y, m, d);
@@ -1239,6 +1409,293 @@
       }
 
 
+      // ====== Rendering ======
+      function render() {
+        monthSel.value = String(viewMonth);
+        yearInp.value = String(viewYear);
+        scopeText.textContent =
+          `統計範圍：${viewYear} 年（心理調適假以年份計；慰休/補假為全部資料累積）`;
+
+        calEl.innerHTML = "";
+
+        const first = new Date(viewYear, viewMonth - 1, 1);
+        const last = new Date(viewYear, viewMonth, 0);
+        const daysInMonth = last.getDate();
+
+        const firstDow = (first.getDay() + 6) % 7; // Monday-first
+        const totalCells = Math.ceil((firstDow + daysInMonth) / 7) * 7;
+
+        for (let i = 0; i < totalCells; i++) {
+          const dayNum = i - firstDow + 1;
+
+          if (dayNum < 1 || dayNum > daysInMonth) {
+            const empty = document.createElement("div");
+            empty.className = "cell muted";
+            calEl.appendChild(empty);
+            continue;
+          }
+
+          const cell = renderDayCell({
+            y: viewYear,
+            m: viewMonth,
+            d: dayNum
+          });
+
+          calEl.appendChild(cell);
+        }
+
+        computeAndRenderStats();
+      }
+
+      function computeAndRenderStats() {
+        // ===== 修護獎金 / 上班天數（每次 render 都重新算）=====
+        const requiredWorkDays = computeMonthlyRequiredWorkDays(viewYear, viewMonth);
+
+        const actualWorkDays = computeActualWorkDays(viewYear, viewMonth, requiredWorkDays);
+
+        const maintenanceThreshold = computeMaintenanceBonusThreshold(requiredWorkDays);
+
+        let weiUsed = 0;
+        let psyUsedYear = 0;
+
+        let compEarned = 0;
+        let compUsed = 0;
+
+        const keys = Object.keys(store);
+        for (const k of keys) {
+          const e = store[k];
+          if (!e || !e.status) continue;
+          const { y, m, d } = parseKey(k);
+
+          if (e.status === STATUS.WEI) weiUsed++;
+          if (y === viewYear && e.status === STATUS.PSY) psyUsedYear++;
+          if (e.status === STATUS.COMP) compUsed++;
+
+          if (isRedDay(y, m, d) && e.status === STATUS.WORK) compEarned++;
+        }
+
+        const weiLeft = WEI_TOTAL - weiUsed;
+        weiBig.textContent = `${Math.max(weiLeft, 0)} 天剩餘`;
+        weiUsedPill.textContent = `已用：${weiUsed} 天`;
+        weiLeftPill.textContent = `剩餘：${weiLeft} 天`;
+        weiLeftPill.className = "pill " + (weiLeft >= 0 ? "ok" : "bad");
+
+        const psyLeft = PSY_TOTAL_PER_YEAR - psyUsedYear;
+        psyBig.textContent = `${Math.max(psyLeft, 0)} 天（${viewYear} 年剩餘）`;
+        psyUsedPill.textContent = `已用：${psyUsedYear} 天`;
+        psyLeftPill.textContent = `剩餘：${psyLeft} 天`;
+        psyLeftPill.className = "pill " + (psyLeft >= 0 ? "ok" : "bad");
+
+        const owe = compEarned - compUsed;
+        compBig.textContent = `${owe} 天`;
+        compEarnPill.textContent = `累積額度：${compEarned} 天`;
+        compUsedPill.textContent = `已用：${compUsed} 天`;
+        compOwePill.textContent = `尚有：${owe} 天`;
+        compOwePill.className = "pill " + (owe >= 0 ? "ok" : "warn");
+
+        requiredWorkPill.textContent = `應上班：${requiredWorkDays} 天`;
+
+        actualWorkPill.textContent = `實際上班：${actualWorkDays} 天`;
+
+        thresholdWorkPill.textContent = `門檻：${maintenanceThreshold} 天`;
+
+        workDayBig.textContent =
+          actualWorkDays >= maintenanceThreshold ? "✅ 達標" : "❌ 未達標";
+
+        // // TEST: working days calculation
+        // console.log("每月應上班天數:", requiredWorkDays);
+        // console.log("實際上班天數:", actualWorkDays);
+        // console.log("修護獎金門檻:", maintenanceThreshold);
+
+      }
+
+      // ====== Modal ======
+      let editing = null;
+      function openEditModal(y, m, d) {
+        editing = { y, m, d };
+        const k = keyOf(y, m, d);
+        const red = isRedDay(y, m, d);
+        const st = getDayStatus(y, m, d);
+        const note = getDayNote(y, m, d);
+        const label = redDayLabel(y, m, d);
+
+        mTitle.textContent = `編輯：${k}`;
+        mIsRed.textContent = red ? `是（${label || "政府行事曆"}）` : "否";
+
+        statusSel.value = st;
+        noteInp.value = note;
+
+        const hints = [];
+        if (red) {
+          hints.push("這天是見紅休：若選「例假」→ 計入例假。");
+          hints.push("若選「上班」→ 視為紅字出勤，補假額度 +1。");
+          hints.push("若選「慰休/補假/心理調適假」→ 代表你用該假別休，不視為例假。");
+        } else {
+          hints.push("這天不是見紅休：通常不影響補假額度。");
+        }
+        mHint.textContent = hints.join(" ");
+
+        modalBack.style.display = "flex";
+      }
+
+      function closeEditModal() {
+        modalBack.style.display = "none";
+        editing = null;
+      }
+
+      closeModal.addEventListener("click", closeEditModal);
+      modalBack.addEventListener("click", (e) => { if (e.target === modalBack) closeEditModal(); });
+
+      clearDayBtn.addEventListener("click", () => {
+        if (!editing) return;
+        const k = keyOf(editing.y, editing.m, editing.d);
+        delete store[k];
+        saveAll(store);
+        closeEditModal();
+        render();
+      });
+
+      saveDayBtn.addEventListener("click", () => {
+        if (!editing) return;
+        const k = keyOf(editing.y, editing.m, editing.d);
+        store[k] = { status: statusSel.value, note: noteInp.value.trim() };
+        saveAll(store);
+        closeEditModal();
+        render();
+      });
+
+      // ====== Navigation ======
+      prevBtn.addEventListener("click", () => {
+        viewMonth--;
+        if (viewMonth <= 0) { viewMonth = 12; viewYear--; }
+        render();
+      });
+      nextBtn.addEventListener("click", () => {
+        viewMonth++;
+        if (viewMonth >= 13) { viewMonth = 1; viewYear++; }
+        render();
+      });
+      todayBtn.addEventListener("click", () => {
+        viewYear = now.getFullYear();
+        viewMonth = now.getMonth() + 1;
+        render();
+      });
+      monthSel.addEventListener("change", () => {
+        viewMonth = Number(monthSel.value);
+        render();
+      });
+      yearInp.addEventListener("change", () => {
+        const v = Number(yearInp.value);
+        if (!Number.isFinite(v)) return;
+        viewYear = Math.max(1970, Math.min(2100, v));
+        render();
+      });
+
+      // ====== Reset actions ======
+      resetMonthBtn.addEventListener("click", () => {
+        if (!confirm("確定要清除此月所有設定？（只影響目前檢視月份）")) return;
+        const y = viewYear, m = viewMonth;
+        for (let d = 1; d <= 31; d++) {
+          const k = keyOf(y, m, d);
+          if (store[k]) delete store[k];
+        }
+        saveAll(store);
+        render();
+      });
+
+      resetAllBtn.addEventListener("click", () => {
+        if (!confirm("確定要清除全部紀錄？（不可復原）")) return;
+        store = {};
+        saveAll(store);
+        render();
+      });
+
+      // ====== Import/Export shift records ======
+      exportBtn.addEventListener("click", () => {
+        jsonBox.value = JSON.stringify(store, null, 2);
+        jsonBox.focus();
+        jsonBox.select();
+      });
+
+      importBtn.addEventListener("click", () => {
+        try {
+          const obj = JSON.parse(jsonBox.value);
+          if (!obj || typeof obj !== "object") throw new Error("JSON 不是物件");
+          for (const [k, v] of Object.entries(obj)) {
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(k)) throw new Error("日期格式錯誤：" + k);
+            if (!v || typeof v !== "object") throw new Error("資料格式錯誤：" + k);
+            if (v.status && !STATUS_META[v.status]) throw new Error("未知狀態：" + v.status + " @ " + k);
+            if (v.note && typeof v.note !== "string") throw new Error("note 必須是字串：" + k);
+          }
+          store = obj;
+          saveAll(store);
+          alert("匯入成功");
+          render();
+        } catch (err) {
+          alert("匯入失敗：" + err.message);
+        }
+      });
+
+      // 裝置旋轉
+      window.addEventListener("orientationchange", () => {
+        syncUIMode();
+      });
+
+      // Resize
+      let resizeTimer = null;
+
+      window.addEventListener("resize", () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          syncUIMode();
+        }, 150);
+      });
+
+
+      // ====== Boot ======
+      (async () => {
+        initTheme();
+        await loadGovCalendar();
+        syncUIMode();
+        render();
+      })();
+    })();
+
+    const CLIENT_ID = "841726354418-mn23od9qpuanjerjl350cpgn884jaa05.apps.googleusercontent.com";
+    let accessToken = null;
+
+    // 登入並取得 Access Token
+    function googleLoginAndGetToken() {
+      const client = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: "https://www.googleapis.com/auth/calendar.events",
+        callback: (tokenResponse) => {
+          accessToken = tokenResponse.access_token;
+          console.log("OAuth success", tokenResponse);
+          alert("登入成功，已取得 Calendar 權限");
+        },
+      });
+
+      client.requestAccessToken();
+    }
+
+    // 寫入測試事件
+    async function syncCurrentMonthToGoogle() {
+      if (!accessToken) {
+        alert("請先登入 Google");
+        return;
+      }
+
+      const calendarId = await ensureShiftCalendar();
+
+      const y = viewYear;
+      const m = viewMonth;
+      const daysInMonth = new Date(y, m, 0).getDate();
+>>>>>>> a14468be7eba40eba65024783ea075e7c60a4b37
+
+      let created = 0;
+
+<<<<<<< HEAD
       // ====== Rendering ======
       function render() {
         monthSel.value = String(viewMonth);
@@ -1736,6 +2193,104 @@
 
 
     })();
+=======
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = keyOf(y, m, d);
+
+        // 用「計算後狀態」
+        const status = getDayStatus(y, m, d);
+        const note = getDayNote(y, m, d);
+
+        const event = {
+          summary: STATUS_META[status]?.label || status,
+          description: note || "",
+          start: { date: dateStr },
+          end: {
+            date: (() => {
+              const next = new Date(dateStr);
+              next.setDate(next.getDate() + 1);
+              return next.toISOString().slice(0, 10);
+            })(),
+          },
+          extendedProperties: {
+            private: {
+              source: "shift-calendar",
+              date: dateStr,
+              status: status,
+            },
+          },
+        };
+
+        const existing = await findShiftEvent(calendarId, dateStr);
+
+        let res;
+
+        if (existing) {
+          // 已存在 → 更新（PATCH）
+          res = await fetch(
+            `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${existing.id}`,
+            {
+              method: "PATCH",
+              headers: {
+                Authorization: "Bearer " + accessToken,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(event),
+            }
+          );
+        } else {
+          // 不存在 → 新增（POST）
+          res = await fetch(
+            `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: "Bearer " + accessToken,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(event),
+            }
+          );
+        }
+
+        if (!res.ok) {
+          const err = await res.json();
+          console.error("同步失敗", dateStr, err);
+          continue;
+        }
+
+        created++;
+
+      }
+
+      alert(`同步完成：本月共寫入 ${created} 筆班表事件`);
+    }
+
+    async function findShiftEvent(calendarId, dateStr) {
+      const timeMin = `${dateStr}T00:00:00+08:00`;
+      const timeMax = `${dateStr}T23:59:59+08:00`;
+
+      const url =
+        `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events` +
+        `?timeMin=${encodeURIComponent(timeMin)}` +
+        `&timeMax=${encodeURIComponent(timeMax)}` +
+        `&privateExtendedProperty=source=shift-calendar`;
+
+      const res = await fetch(url, {
+        headers: {
+          Authorization: "Bearer " + accessToken,
+        },
+      });
+
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      return data.items?.[0] || null;
+    }
+
+
+
+>>>>>>> a14468be7eba40eba65024783ea075e7c60a4b37
   </script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
