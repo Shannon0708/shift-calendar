@@ -270,6 +270,9 @@ body:not([data-mode="google"]) .dot {
           <button id="nextBtn" class="ghost">→</button>
           <button id="themeBtn" class="ghost">切換模式</button>
           <button id="todayBtn">回到今天</button>
+          <button onclick="googleLoginAndGetToken()">Google 登入</button>
+          <button onclick="createTestEvent()">寫入測試事件</button>
+
         </div>
       </div>
 
@@ -914,9 +917,9 @@ body:not([data-mode="google"]) .dot {
     actualWorkDays >= maintenanceThreshold ? "✅ 達標" : "❌ 未達標";
 
     // // TEST: working days calculation
-    // console.log("📊 每月應上班天數:", requiredWorkDays);
-    // console.log("📊 實際上班天數:", actualWorkDays);
-    // console.log("📊 修護獎金門檻:", maintenanceThreshold);
+    // console.log("每月應上班天數:", requiredWorkDays);
+    // console.log("實際上班天數:", actualWorkDays);
+    // console.log("修護獎金門檻:", maintenanceThreshold);
 
   }
 
@@ -1071,6 +1074,62 @@ body:not([data-mode="google"]) .dot {
     render();
   })();
 })();
+
+const CLIENT_ID = "841726354418-mn23od9qpuanjerjl350cpgn884jaa05.apps.googleusercontent.com";
+let accessToken = null;
+
+// 登入並取得 Access Token
+function googleLoginAndGetToken() {
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: "https://www.googleapis.com/auth/calendar.events",
+    callback: (tokenResponse) => {
+      accessToken = tokenResponse.access_token;
+      console.log("OAuth success", tokenResponse);
+      alert("登入成功，已取得 Calendar 權限");
+    },
+  });
+
+  client.requestAccessToken();
+}
+
+// 寫入測試事件
+async function createTestEvent() {
+  if (!accessToken) {
+    alert("請先登入 Google");
+    return;
+  }
+
+  const event = {
+    summary: "Shift Calendar 測試",
+    description: "這是從 Shift Calendar 寫入的事件",
+    start: {
+      date: "2026-01-19",   // 全天事件（測試用）
+    },
+    end: {
+      date: "2026-01-20",
+    },
+  };
+
+  const res = await fetch(
+    "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+    {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + accessToken,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(event),
+    }
+  );
+
+  const data = await res.json();
+  console.log("Event created", data);
+  alert("已成功寫入 Google Calendar！");
+}
+
 </script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
 </body>
 </html>
